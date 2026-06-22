@@ -15,7 +15,7 @@ if 'rol_actual' not in st.session_state:
 def conectar_db():
     return mysql.connector.connect(
         host="mysql-escinv.alwaysdata.net",
-        user="escinv_ithanr",
+        user="escinv_IthanR",
         password="23Ene2003",
         database="escinv_hola"
     )
@@ -58,6 +58,15 @@ else:
     st.sidebar.markdown(f"### Bienvenido, {st.session_state['usuario_actual']}")
     st.sidebar.markdown(f"**Rol:** {st.session_state['rol_actual']}")
 
+    # MUESTRA DE PRIVILEGIOS AL USUARIO Y DEFINICIÓN DE MENÚ
+    st.sidebar.markdown("**Tus Privilegios:**")
+    if st.session_state['rol_actual'] == 'Administrador':
+        st.sidebar.info("Acceso Total: Puedes ver reportes, gestionar usuarios y modificar el inventario.")
+        menu = ["Catálogo de Productos", "Altas y Bajas de Insumos", "Reporte de Movimientos", "Gestión de Usuarios"]
+    else:
+        st.sidebar.info("Acceso Operativo: Limitado a consultar el catálogo y registrar entradas o salidas de stock.")
+        menu = ["Catálogo de Productos", "Altas y Bajas de Insumos"]
+
     if st.sidebar.button("Cerrar Sesión"):
         st.session_state['autenticado'] = False
         st.session_state['usuario_actual'] = ""
@@ -65,13 +74,6 @@ else:
         st.rerun()
 
     st.sidebar.markdown("---")
-
-    # Lógica de Menú Dinámico según el Rol
-    if st.session_state['rol_actual'] == 'Administrador':
-        menu = ["Catálogo de Productos", "Altas y Bajas de Insumos", "Reporte de Movimientos", "Gestión de Usuarios"]
-    else:
-        # Si es cualquier otro rol (Usuario), restringimos las opciones
-        menu = ["Catálogo de Productos", "Altas y Bajas de Insumos"]
 
     eleccion = st.sidebar.selectbox("Módulo", menu)
 
@@ -231,15 +233,25 @@ else:
                         st.warning("Debes llenar todos los campos.")
 
         st.markdown("---")
-        st.write("### Usuarios Registrados")
+
+        # MUESTRA DE PRIVILEGIOS A USUARIOS (VICEVERSA)
+        st.write("### Usuarios Registrados por Nivel de Privilegio")
 
         try:
             db = conectar_db()
-            query = "SELECT id_usuario AS 'ID', usuario AS 'Usuario', tipo AS 'Tipo de Usuario' FROM usuarios"
+            query = "SELECT id_usuario AS 'ID', usuario AS 'Usuario', tipo AS 'Privilegio' FROM usuarios ORDER BY tipo ASC, usuario ASC"
             df_usuarios = pd.read_sql(query, db)
             db.close()
 
             if not df_usuarios.empty:
-                st.dataframe(df_usuarios, use_container_width=True)
+                filtro_privilegio = st.selectbox("Filtrar la tabla por privilegio:",
+                                                 ["Todos los accesos", "Administrador", "Usuario"])
+
+                if filtro_privilegio != "Todos los accesos":
+                    df_mostrar = df_usuarios[df_usuarios['Privilegio'] == filtro_privilegio]
+                else:
+                    df_mostrar = df_usuarios
+
+                st.dataframe(df_mostrar, use_container_width=True)
         except Exception as e:
             st.error(f"Error al cargar los usuarios: {e}")
