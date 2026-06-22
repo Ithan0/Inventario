@@ -15,7 +15,7 @@ if 'rol_actual' not in st.session_state:
 def conectar_db():
     return mysql.connector.connect(
         host="mysql-escinv.alwaysdata.net",
-        user="escinv_ithanr",
+        user="escinv_IthanR",
         password="23Ene2003",
         database="escinv_hola"
     )
@@ -99,7 +99,7 @@ else:
                             db.commit()
                             cursor.close()
                             db.close()
-                            st.success(f"Insumo '{nombre}' guardado exitosamente en MySQL.")
+                            st.success(f"Insumo '{nombre}' guardado exitosamente en la base de datos.")
                         except Exception as e:
                             st.error(f"Error al guardar: {e}")
                     else:
@@ -233,22 +233,28 @@ else:
                         st.warning("Debes llenar todos los campos.")
 
         st.markdown("---")
-
-        # MUESTRA DE PRIVILEGIOS A USUARIOS (VICEVERSA)
-        st.write("### Usuarios Registrados por Nivel de Privilegio")
+        st.write("### Usuarios Registrados y sus Privilegios")
 
         try:
             db = conectar_db()
-            query = "SELECT id_usuario AS 'ID', usuario AS 'Usuario', tipo AS 'Privilegio' FROM usuarios ORDER BY tipo ASC, usuario ASC"
+            query = "SELECT id_usuario AS 'ID', usuario AS 'Usuario', tipo AS 'Rol' FROM usuarios ORDER BY tipo ASC, usuario ASC"
             df_usuarios = pd.read_sql(query, db)
             db.close()
 
             if not df_usuarios.empty:
-                filtro_privilegio = st.selectbox("Filtrar la tabla por privilegio:",
-                                                 ["Todos los accesos", "Administrador", "Usuario"])
+                def asignar_privilegios(rol):
+                    if rol == 'Administrador':
+                        return 'Acceso Total (Catálogo, Movimientos, Reportes y Usuarios)'
+                    else:
+                        return 'Acceso Operativo (Solo Catálogo y Movimientos)'
 
-                if filtro_privilegio != "Todos los accesos":
-                    df_mostrar = df_usuarios[df_usuarios['Privilegio'] == filtro_privilegio]
+
+                df_usuarios['Privilegios Asignados'] = df_usuarios['Rol'].apply(asignar_privilegios)
+
+                filtro_rol = st.selectbox("Filtrar la tabla por rol:", ["Todos", "Administrador", "Usuario"])
+
+                if filtro_rol != "Todos":
+                    df_mostrar = df_usuarios[df_usuarios['Rol'] == filtro_rol]
                 else:
                     df_mostrar = df_usuarios
 
