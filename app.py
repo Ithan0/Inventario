@@ -19,7 +19,6 @@ def conectar_db():
         password="23Ene2003",
         database="escinv_hola"
     )
-    )
 
 
 if not st.session_state['autenticado']:
