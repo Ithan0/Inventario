@@ -15,7 +15,7 @@ if 'rol_actual' not in st.session_state:
 def conectar_db():
     return mysql.connector.connect(
         host="mysql-escinv.alwaysdata.net",
-        user="escinv_IthanR",
+        user="escinv_ithanr",
         password="23Ene2003",
         database="escinv_hola"
     )
